@@ -17,7 +17,8 @@ import { validateAuditCompletion } from '@/lib/validation';
 import { downloadAuditReport } from '@/lib/export';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function EditAuditPage({ params }: { params: { id: string } }) {
+
+export default function EditAuditPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
     const {
         currentAudit,
@@ -29,13 +30,18 @@ export default function EditAuditPage({ params }: { params: { id: string } }) {
     } = useAuditStore();
 
     useEffect(() => {
-        const audit = getAuditFromStorage(params.id);
-        if (audit) {
-            initializeAudit(audit);
-        } else {
-            router.push('/audit/drafts');
+        const _ = async (a: any, b: any, c: any) => {
+            const { id } = await params;
+            const audit = getAuditFromStorage(id);
+            if (audit) {
+                b(audit);
+            } else {
+                c.push('/audit/drafts');
+            }
         }
-    }, [params.id, initializeAudit, router]);
+        _(params, initializeAudit, router)
+
+    }, [params, initializeAudit, router]);
 
     const handleComplete = () => {
         if (!currentAudit) return;
