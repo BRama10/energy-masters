@@ -17,6 +17,7 @@ export interface ChecklistItem {
     label: string;
     checked: boolean;
     notes?: string;
+    category?: string;
 }
 
 export interface SealedArea {

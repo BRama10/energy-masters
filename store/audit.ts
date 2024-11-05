@@ -16,15 +16,15 @@ interface AuditStore {
 
 const DEFAULT_CHECKLIST_ITEMS = {
     livingAreaChecklist: [
-        { id: 'trim-gaps', label: 'Check for gaps around window and door trim', checked: false },
-        { id: 'outlet-covers', label: 'Remove switch and outlet covers', checked: false },
-        { id: 'outlet-gaps', label: 'Inspect for gaps between electrical box and drywall', checked: false },
+        { id: 'trim-gaps', label: 'Check for gaps around window and door trim', checked: false, notes: '' },
+        { id: 'outlet-covers', label: 'Remove switch and outlet covers', checked: false, notes: '' },
+        { id: 'outlet-gaps', label: 'Inspect for gaps between electrical box and drywall', checked: false, notes: '' },
         // Add more items as needed
     ],
     bathroomChecklist: [
-        { id: 'toilet-leak', label: 'Conduct dye test and check for leaks', checked: false },
-        { id: 'shower-leak', label: 'Check for leaks from showerhead and bath spout', checked: false },
-        { id: 'plumbing-gaps', label: 'Inspect for gaps between drywall and piping', checked: false },
+        { id: 'toilet-leak', label: 'Conduct dye test and check for leaks', checked: false, notes: '' },
+        { id: 'shower-leak', label: 'Check for leaks from showerhead and bath spout', checked: false, notes: '' },
+        { id: 'plumbing-gaps', label: 'Inspect for gaps between drywall and piping', checked: false, notes: '' },
         // Add more items
     ],
     // Add other sections
