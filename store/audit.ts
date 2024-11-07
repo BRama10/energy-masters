@@ -7,12 +7,18 @@ interface AuditStore {
     initializeAudit: (basicInfo: Partial<AuditData>) => void;
     updateBasicInfo: (info: Partial<AuditData>) => void;
     updateChecklist: (
-        section: 'livingAreaChecklist' | 'bathroomChecklist' | 'kitchenChecklist' | 'safetyChecklist',
-        items: ChecklistItem[]
+      section: 'livingAreaChecklist' | 'bathroomChecklist' | 'kitchenChecklist' | 'safetyChecklist',
+      items: ChecklistItem[]
     ) => void;
     updateNotes: (notes: string) => void;
     completeAudit: () => void;
-}
+    resetAudit: () => void;
+  }
+  
+  const generateUniqueId = () => {
+    return `audit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  };
+  
 
 const DEFAULT_CHECKLIST_ITEMS = {
     livingAreaChecklist: [
@@ -32,33 +38,35 @@ const DEFAULT_CHECKLIST_ITEMS = {
 
 export const useAuditStore = create<AuditStore>((set) => ({
     currentAudit: null,
-
+    
     initializeAudit: (basicInfo) => set({
-        currentAudit: {
-            id: Date.now().toString(),
-            status: 'draft',
-            ...DEFAULT_CHECKLIST_ITEMS,
-            ...basicInfo,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            sealedAreas: {
-                outlets: false,
-                vents: false,
-                windows: false,
-                baseboards: false,
-            },
-            faucetAerators: {
-                bath: false,
-                kitchen: false,
-            },
-            showerHead: false,
-            toiletTummy: false,
-            standardPowerStrip: false,
-            smartPowerStrip: false,
-            notes: '',
+      currentAudit: {
+        id: generateUniqueId(), // Generate a new unique ID for each new audit
+        status: 'draft',
+        ...DEFAULT_CHECKLIST_ITEMS,
+        ...basicInfo,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        sealedAreas: {
+          outlets: false,
+          vents: false,
+          windows: false,
+          baseboards: false,
         },
+        faucetAerators: {
+          bath: false,
+          kitchen: false,
+        },
+        showerHead: false,
+        toiletTummy: false,
+        standardPowerStrip: false,
+        smartPowerStrip: false,
+        notes: '',
+      },
     }),
-
+    
+    resetAudit: () => set({ currentAudit: null }),
+    
     updateBasicInfo: (info) => set((state) => ({
         currentAudit: state.currentAudit ? {
             ...state.currentAudit,

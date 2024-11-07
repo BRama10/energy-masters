@@ -6,6 +6,14 @@ import './globals.css';
 
 import { Providers } from '@/components/providers';
 
+import type { Viewport } from 'next'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {

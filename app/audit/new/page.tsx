@@ -12,11 +12,25 @@ import { Footer } from '@/components/layout/Footer';
 import { useAuditStore } from '@/store/audit';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { saveAuditToStorage } from '@/lib/storage';
 
 export default function NewAuditPage() {
     const router = useRouter();
-    const { currentAudit, initializeAudit, updateBasicInfo, updateChecklist, completeAudit } = useAuditStore();
+    const {
+        currentAudit,
+        initializeAudit,
+        updateBasicInfo,
+        updateChecklist,
+        completeAudit,
+        resetAudit
+    } = useAuditStore();
 
+    // Reset the audit store when mounting the new audit page
+    useEffect(() => {
+        resetAudit();
+    }, [resetAudit]);
+
+    // Initialize a fresh audit after resetting
     useEffect(() => {
         if (!currentAudit) {
             initializeAudit({
@@ -32,12 +46,35 @@ export default function NewAuditPage() {
         }
 
         completeAudit();
+        if (currentAudit) {
+            saveAuditToStorage({
+                ...currentAudit,
+                status: 'completed',
+                updatedAt: new Date().toISOString()
+            });
+        }
         toast.success('Audit completed successfully');
         router.push('/');
     };
 
     const handleSaveDraft = () => {
-        toast.success('Draft saved successfully');
+        if (!currentAudit) {
+            toast.error('No audit data to save');
+            return;
+        }
+
+        try {
+            saveAuditToStorage({
+                ...currentAudit,
+                status: 'draft',
+                updatedAt: new Date().toISOString()
+            });
+            toast.success('Draft saved successfully');
+            router.push('/audit/drafts');
+        } catch (error) {
+            console.error('Error saving draft:', error);
+            toast.error('Error saving draft. Please try again.');
+        }
     };
 
     if (!currentAudit) return null;
