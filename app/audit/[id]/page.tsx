@@ -1,8 +1,8 @@
 // app/audit/[id]/page.tsx
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BasicInfoForm } from '@/components/BasicInfoForm';
@@ -16,9 +16,13 @@ import { getAuditFromStorage } from '@/lib/storage';
 import { validateAuditCompletion } from '@/lib/validation';
 import { downloadAuditReport } from '@/lib/export';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuditCollaboration } from '@/hooks/useAuditCollaboration';
+import { CollaborationIndicator } from '@/components/CollaborationIndicator';
+import { AuditData, ChecklistItem } from '@/types/audit';
 
 
-export default function EditAuditPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditAuditPage() {
+    const id = useParams().id;
     const router = useRouter();
     const {
         currentAudit,
@@ -29,19 +33,24 @@ export default function EditAuditPage({ params }: { params: Promise<{ id: string
         completeAudit
     } = useAuditStore();
 
-    useEffect(() => {
-        const _ = async (a: any, b: any, c: any) => {
-            const { id } = await params;
-            const audit = getAuditFromStorage(id);
-            if (audit) {
-                b(audit);
-            } else {
-                c.push('/audit/drafts');
-            }
-        }
-        _(params, initializeAudit, router)
+    const { broadcastChange } = useAuditCollaboration(id! as string);
 
-    }, [params, initializeAudit, router]);
+    // Handle updates with broadcasting
+    const handleBasicInfoUpdate = async (info: Partial<AuditData>) => {
+        updateBasicInfo(info);
+        await broadcastChange(info, 'basicInfo');
+    };
+
+    useEffect(() => {
+        const audit = getAuditFromStorage(id! as string);
+
+        if (audit) {
+            initializeAudit(audit);
+        } else {
+            router.push('/audit/drafts');
+        }
+
+    }, [])
 
     const handleComplete = () => {
         if (!currentAudit) return;
@@ -67,10 +76,22 @@ export default function EditAuditPage({ params }: { params: Promise<{ id: string
         toast.success('Draft saved successfully');
     };
 
+    const handleChecklistUpdate = async (
+        section: 'livingAreaChecklist' | 'bathroomChecklist' | 'kitchenChecklist' | 'safetyChecklist',
+        items: ChecklistItem[]
+    ) => {
+        updateChecklist(section, items);
+        await broadcastChange(items, 'checklist', section);
+    };
+
     if (!currentAudit) return null;
 
     return (
         <>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold">Audit Details</h1>
+                <CollaborationIndicator auditId={id! as string} />
+            </div>
             <Tabs defaultValue="basic" className="space-y-6">
                 <ScrollArea className="w-full">
                     <TabsList className="w-full justify-start">
@@ -86,7 +107,7 @@ export default function EditAuditPage({ params }: { params: Promise<{ id: string
                 <TabsContent value="basic">
                     <BasicInfoForm
                         data={currentAudit}
-                        onUpdate={updateBasicInfo}
+                        onUpdate={handleBasicInfoUpdate}
                     />
                 </TabsContent>
 
@@ -98,7 +119,7 @@ export default function EditAuditPage({ params }: { params: Promise<{ id: string
                         <CardContent>
                             <EnhancedChecklist
                                 items={currentAudit?.livingAreaChecklist || []}
-                                onUpdate={(items) => updateChecklist('livingAreaChecklist', items)}
+                                onUpdate={(items) => handleChecklistUpdate('livingAreaChecklist', items)}
                             />
                         </CardContent>
                     </Card>
@@ -112,7 +133,7 @@ export default function EditAuditPage({ params }: { params: Promise<{ id: string
                         <CardContent>
                             <EnhancedChecklist
                                 items={currentAudit?.bathroomChecklist || []}
-                                onUpdate={(items) => updateChecklist('bathroomChecklist', items)}
+                                onUpdate={(items) => handleChecklistUpdate('bathroomChecklist', items)}
                             />
                         </CardContent>
                     </Card>
@@ -126,7 +147,7 @@ export default function EditAuditPage({ params }: { params: Promise<{ id: string
                         <CardContent>
                             <EnhancedChecklist
                                 items={currentAudit?.kitchenChecklist || []}
-                                onUpdate={(items) => updateChecklist('kitchenChecklist', items)}
+                                onUpdate={(items) => handleChecklistUpdate('kitchenChecklist', items)}
                             />
                         </CardContent>
                     </Card>
@@ -140,7 +161,7 @@ export default function EditAuditPage({ params }: { params: Promise<{ id: string
                         <CardContent>
                             <EnhancedChecklist
                                 items={currentAudit?.safetyChecklist || []}
-                                onUpdate={(items) => updateChecklist('safetyChecklist', items)}
+                                onUpdate={(items) => handleChecklistUpdate('safetyChecklist', items)}
                             />
                         </CardContent>
                     </Card>

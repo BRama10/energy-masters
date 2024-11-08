@@ -18,6 +18,7 @@ export default function DraftsPage() {
     const [deleteId, setDeleteId] = useState<string | null>(null);
 
     useEffect(() => {
+        console.log(localStorage)
         const loadedAudits = getAuditsFromStorage();
         setAudits(loadedAudits);
     }, []);
