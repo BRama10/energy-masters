@@ -1,0 +1,46 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Audit {
+  id                       String    @id @default(uuid())
+  unitNumber              String
+  teamNumber              String
+  completedBy             String
+  date                    DateTime
+  timeIn                  String
+  timeOut                 String
+  isEnergyDataCandidate   Boolean   @default(false)
+  isResidentProfileCandidate Boolean @default(false)
+  status                  AuditStatus @default(draft)
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
+
+  // Checklist items as JSON
+  introductionChecklist   Json?     @db.JsonB
+  safetyChecklist         Json?     @db.JsonB
+  livingAreaChecklist     Json?     @db.JsonB
+  bathroomChecklist       Json?     @db.JsonB
+  kitchenChecklist        Json?     @db.JsonB
+  
+  // Optional fields
+  installations           Json?     @db.JsonB
+  summary                 Json?     @db.JsonB
+  generalNotes           String?
+  
+  // Relations
+  userId                 String    // For user association
+}
+
+enum AuditStatus {
+  draft
+  completed
+  review
+}

@@ -6,28 +6,65 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from '@/components/StatusBadge';
-import { getAuditsFromStorage } from '@/lib/storage';
 import { AuditData } from '@/types/audit';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Edit2, FileText, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { getAudits, deleteAudit } from '@/lib/actions/audit';
+import { toast } from 'sonner';
+import { useUser } from '@/hooks/useUser';
 
 export default function DraftsPage() {
+    const { username } = useUser();
     const router = useRouter();
     const [audits, setAudits] = useState<AuditData[]>([]);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const loadedAudits = getAuditsFromStorage();
-        setAudits(loadedAudits);
-    }, []);
+        const loadAudits = async () => {
+            try {
+                const result = await getAudits(username!);
+                if (result.success) {
+                    setAudits(result.data as AuditData[]);
+                } else {
+                    toast.error(result.error);
+                }
+            } catch (error) {
+                toast.error('Failed to load audits');
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-    const handleDelete = (id: string) => {
-        const updatedAudits = audits.filter(audit => audit.id !== id);
-        localStorage.setItem('energy-masters-audits', JSON.stringify(updatedAudits));
-        setAudits(updatedAudits);
-        setDeleteId(null);
+        if (username) {
+            loadAudits();
+        }
+    }, [username]);
+
+    const handleDelete = async (id: string) => {
+        try {
+            const result = await deleteAudit(username!, id);
+            if (result.success) {
+                setAudits(prevAudits => prevAudits.filter(audit => audit.id !== id));
+                toast.success('Audit deleted successfully');
+            } else {
+                toast.error(result.error);
+            }
+        } catch (error) {
+            toast.error('Failed to delete audit');
+        } finally {
+            setDeleteId(null);
+        }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary" />
+            </div>
+        );
+    }
 
     if (audits.length === 0) {
         return (
@@ -66,7 +103,7 @@ export default function DraftsPage() {
                                                 <StatusBadge status={audit.status!} />
                                             </CardTitle>
                                             <p className="text-sm text-muted-foreground">
-                                                {new Date(audit.date!).toLocaleDateString()}
+                                                {new Date(audit.date).toLocaleDateString()}
                                             </p>
                                         </div>
                                         <div className="flex gap-2">

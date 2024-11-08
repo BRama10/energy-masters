@@ -1,101 +1,91 @@
-// store/audit-store.ts
+// store/audit.ts
 import { create } from 'zustand';
-import { AuditData, ChecklistItem } from '../types/audit';
+import { v4 as uuidv4 } from 'uuid';
+import { AuditData, ChecklistItem } from '@/types/audit';
+import { CHECKLIST_ITEMS } from '@/constants/checklist-items';
 
 interface AuditStore {
-    currentAudit: AuditData | null;
-    initializeAudit: (basicInfo: Partial<AuditData>) => void;
-    updateBasicInfo: (info: Partial<AuditData>) => void;
-    updateChecklist: (
-      section: 'livingAreaChecklist' | 'bathroomChecklist' | 'kitchenChecklist' | 'safetyChecklist',
-      items: ChecklistItem[]
-    ) => void;
-    updateNotes: (notes: string) => void;
-    completeAudit: () => void;
-    resetAudit: () => void;
-  }
-  
-  const generateUniqueId = () => {
-    return `audit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  };
-  
-
-const DEFAULT_CHECKLIST_ITEMS = {
-    livingAreaChecklist: [
-        { id: 'trim-gaps', label: 'Check for gaps around window and door trim', checked: false, notes: '' },
-        { id: 'outlet-covers', label: 'Remove switch and outlet covers', checked: false, notes: '' },
-        { id: 'outlet-gaps', label: 'Inspect for gaps between electrical box and drywall', checked: false, notes: '' },
-        // Add more items as needed
-    ],
-    bathroomChecklist: [
-        { id: 'toilet-leak', label: 'Conduct dye test and check for leaks', checked: false, notes: '' },
-        { id: 'shower-leak', label: 'Check for leaks from showerhead and bath spout', checked: false, notes: '' },
-        { id: 'plumbing-gaps', label: 'Inspect for gaps between drywall and piping', checked: false, notes: '' },
-        // Add more items
-    ],
-    // Add other sections
-};
+  currentAudit: AuditData | null;
+  initializeAudit: (data?: Partial<AuditData>) => void;
+  updateBasicInfo: (data: Partial<AuditData>) => void;
+  updateChecklist: (section: keyof typeof CHECKLIST_ITEMS, items: ChecklistItem[]) => void;
+  updateNotes: (notes: string) => void;
+  completeAudit: () => void;
+  resetAudit: () => void;
+}
 
 export const useAuditStore = create<AuditStore>((set) => ({
-    currentAudit: null,
-    
-    initializeAudit: (basicInfo) => set({
-      currentAudit: {
-        id: generateUniqueId(), // Generate a new unique ID for each new audit
-        status: 'draft',
-        ...DEFAULT_CHECKLIST_ITEMS,
-        ...basicInfo,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        sealedAreas: {
-          outlets: false,
-          vents: false,
-          windows: false,
-          baseboards: false,
-        },
-        faucetAerators: {
-          bath: false,
-          kitchen: false,
-        },
-        showerHead: false,
-        toiletTummy: false,
-        standardPowerStrip: false,
-        smartPowerStrip: false,
-        notes: '',
+  currentAudit: null,
+  
+  initializeAudit: (data) => set({
+    currentAudit: {
+      id: uuidv4(),
+      unitNumber: '',
+      teamNumber: '',
+      completedBy: '',
+      date: new Date().toISOString().split('T')[0],
+      timeIn: '',
+      timeOut: '',
+      isEnergyDataCandidate: false,
+      isResidentProfileCandidate: false,
+      status: 'draft',
+      
+      // Initialize all checklist sections with spread operator to create new arrays
+      introductionChecklist: [...CHECKLIST_ITEMS.introduction],
+      safetyChecklist: [...CHECKLIST_ITEMS.safety],
+      livingAreaChecklist: [...CHECKLIST_ITEMS.livingArea],
+      bathroomChecklist: [...CHECKLIST_ITEMS.bathroom],
+      kitchenChecklist: [...CHECKLIST_ITEMS.kitchen],
+      sealedAreas: {
+        lightSwitches: 0,
+        outlets: 0,
+        vents: 0,
+        windows: 0,
+        baseboards: 0,
       },
-    }),
+      faucetAerators: {
+        bath: 0,
+        kitchen: 0,
+      },
+      showerHead: 0,
+      toiletTummy: 0,
+      standardPowerStrip: 0,
+      smartPowerStrip: 0,
+
+      ...data
+    }
+  }),
+  
+  updateBasicInfo: (data) => 
+    set((state) => ({
+      currentAudit: state.currentAudit 
+        ? { ...state.currentAudit, ...data }
+        : null
+    })),
+  
+  updateChecklist: (section, items) =>
+    set((state) => ({
+      currentAudit: state.currentAudit
+        ? {
+            ...state.currentAudit,
+            [`${section}Checklist`]: [...items] // Create new array
+          }
+        : null
+    })),
     
-    resetAudit: () => set({ currentAudit: null }),
+  updateNotes: (notes) =>
+    set((state) => ({
+      currentAudit: state.currentAudit
+        ? { ...state.currentAudit, notes }
+        : null
+    })),
     
-    updateBasicInfo: (info) => set((state) => ({
-        currentAudit: state.currentAudit ? {
-            ...state.currentAudit,
-            ...info,
-            updatedAt: new Date().toISOString(),
-        } : null,
+  completeAudit: () =>
+    set((state) => ({
+      currentAudit: state.currentAudit
+        ? { ...state.currentAudit, status: 'completed' }
+        : null
     })),
-
-    updateChecklist: (section, items) => set((state) => ({
-        currentAudit: state.currentAudit ? {
-            ...state.currentAudit,
-            [section]: items,
-            updatedAt: new Date().toISOString(),
-        } : null,
-    })),
-
-    updateNotes: (notes) => set((state) => ({
-        currentAudit: state.currentAudit ? {
-            ...state.currentAudit,
-            notes,
-            updatedAt: new Date().toISOString(),
-        } : null,
-    })),
-
-    completeAudit: () => set((state) => ({
-        currentAudit: state.currentAudit ? {
-            ...state.currentAudit,
-            status: 'completed',
-            updatedAt: new Date().toISOString(),
-        } : null,
-    })),
+    
+  resetAudit: () => set({ currentAudit: null })
 }));
