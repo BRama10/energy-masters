@@ -9,26 +9,56 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { getAuditsFromStorage } from '@/lib/storage';
 import { AuditData } from '@/types/audit';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { Edit2, FileText, Trash2 } from 'lucide-react';
+import { Edit2, FileText, Loader2, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from 'sonner';
 
 export default function DraftsPage() {
     const router = useRouter();
     const [audits, setAudits] = useState<AuditData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [deleteId, setDeleteId] = useState<string | null>(null);
 
     useEffect(() => {
-        console.log(localStorage)
-        const loadedAudits = getAuditsFromStorage();
-        setAudits(loadedAudits);
+        const fetchAudits = async () => {
+            try {
+                const response = await fetch('/api/audits');
+                const data = await response.json();
+                setAudits(data);
+            } catch (error) {
+                console.error('Error fetching audits:', error);
+                toast.error('Error loading drafts');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAudits();
     }, []);
 
-    const handleDelete = (id: string) => {
-        const updatedAudits = audits.filter(audit => audit.id !== id);
-        localStorage.setItem('energy-masters-audits', JSON.stringify(updatedAudits));
-        setAudits(updatedAudits);
-        setDeleteId(null);
+    const handleDelete = async (id: string) => {
+        try {
+            const response = await fetch(`/api/audit/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) throw new Error('Failed to delete audit');
+
+            setAudits(audits.filter(audit => audit.id !== id));
+            toast.success('Audit deleted successfully');
+        } catch (error) {
+            toast.error('Error deleting audit');
+            console.error('Error:', error);
+        }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center p-8">
+                <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+        );
+    }
 
     if (audits.length === 0) {
         return (

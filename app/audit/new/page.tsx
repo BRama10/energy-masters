@@ -13,9 +13,13 @@ import { useAuditStore } from '@/store/audit';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { saveAuditToStorage } from '@/lib/storage';
+import { useUser } from '@/hooks/useUser';
 
 export default function NewAuditPage() {
     const router = useRouter();
+
+    const { username } = useUser();
+
     const {
         currentAudit,
         initializeAudit,
@@ -57,23 +61,30 @@ export default function NewAuditPage() {
         router.push('/');
     };
 
-    const handleSaveDraft = () => {
-        if (!currentAudit) {
-            toast.error('No audit data to save');
+    const handleSaveDraft = async () => {
+        if (!currentAudit?.unitNumber || !currentAudit?.teamNumber) {
+            toast.error('Please fill in required basic information');
             return;
         }
 
         try {
-            saveAuditToStorage({
-                ...currentAudit,
-                status: 'draft',
-                updatedAt: new Date().toISOString()
+            const response = await fetch('/api/audits', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...currentAudit,
+                    username,
+                }),
             });
+
+            if (!response.ok) throw new Error('Failed to save draft');
+
+            const savedAudit = await response.json();
             toast.success('Draft saved successfully');
             router.push('/audit/drafts');
         } catch (error) {
-            console.error('Error saving draft:', error);
-            toast.error('Error saving draft. Please try again.');
+            toast.error('Error saving draft');
+            console.error('Error:', error);
         }
     };
 

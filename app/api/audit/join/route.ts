@@ -8,6 +8,7 @@ export async function POST(request: Request) {
 
     await pusher.trigger(`audit-${auditId}`, 'user-joined', {
         user: username,
+        cluster: "mt1"
     });
 
     return NextResponse.json({ success: true });

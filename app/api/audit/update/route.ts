@@ -11,6 +11,7 @@ export async function POST(request: Request) {
     type,
     section,
     user: username,
+    cluster: "mt1"
   });
 
   return NextResponse.json({ success: true });

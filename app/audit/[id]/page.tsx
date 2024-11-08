@@ -1,181 +1,201 @@
 // app/audit/[id]/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useRouter, useParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BasicInfoForm } from '@/components/BasicInfoForm';
 import { EnhancedChecklist } from '@/components/ChecklistSection';
 import { SummarySection } from '@/components/SummarySection';
-import { NotesSection } from '@/components/NotesSection';
 import { Footer } from '@/components/layout/Footer';
-import { useAuditStore } from '@/store/audit';
-import { toast } from 'sonner';
-import { getAuditFromStorage } from '@/lib/storage';
-import { validateAuditCompletion } from '@/lib/validation';
-import { downloadAuditReport } from '@/lib/export';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuditCollaboration } from '@/hooks/useAuditCollaboration';
 import { CollaborationIndicator } from '@/components/CollaborationIndicator';
 import { AuditData, ChecklistItem } from '@/types/audit';
+import { useSharedAudit } from '@/hooks/useSharedAudit';
+import { CollaborativeCursors } from '@/components/CollaborativeCursors';
+import { useUser } from '@/hooks/useUser';
 
 
 export default function EditAuditPage() {
+
     const id = useParams().id;
     const router = useRouter();
-    const {
-        currentAudit,
-        initializeAudit,
-        updateBasicInfo,
-        updateChecklist,
-        updateNotes,
-        completeAudit
-    } = useAuditStore();
+    const { audit, isLoading, updateAudit } = useSharedAudit(id as string);
 
-    const { broadcastChange } = useAuditCollaboration(id! as string);
+    const { username } = useUser();
 
-    // Handle updates with broadcasting
-    const handleBasicInfoUpdate = async (info: Partial<AuditData>) => {
-        updateBasicInfo(info);
-        await broadcastChange(info, 'basicInfo');
-    };
-
-    useEffect(() => {
-        const audit = getAuditFromStorage(id! as string);
-
-        if (audit) {
-            initializeAudit(audit);
-        } else {
-            router.push('/audit/drafts');
-        }
-
-    }, [])
-
-    const handleComplete = () => {
-        if (!currentAudit) return;
-
-        const validation = validateAuditCompletion(currentAudit);
-        if (!validation.isValid) {
-            toast.error(validation.message);
-            return;
-        }
-
-        completeAudit();
-        downloadAuditReport(currentAudit);
-        toast.success('Audit completed successfully');
-        router.push('/audit/drafts');
-    };
-
-    const handleSaveDraft = () => {
-        if (!currentAudit) return;
-        localStorage.setItem(
-            'energy-masters-audits',
-            JSON.stringify([currentAudit])
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
         );
-        toast.success('Draft saved successfully');
+    }
+
+    console.log(audit)
+
+    // if (!audit) {
+    //     return (
+    //         <div className="flex items-center justify-center min-h-screen">
+    //             <div className="text-center">
+    //                 <h2 className="text-xl font-semibold mb-2">Audit Not Found</h2>
+    //                 <button
+    //                     onClick={() => router.push('/audit/drafts')}
+    //                     className="text-blue-500 hover:underline"
+    //                 >
+    //                     Return to Drafts
+    //                 </button>
+    //             </div>
+    //         </div>
+    //     );
+    // }
+
+    const handleBasicInfoUpdate = async (info: Partial<AuditData>) => {
+        try {
+            await updateAudit(info, 'basicInfo');
+        } catch (error) {
+            toast.error('Failed to update basic information');
+        }
     };
 
     const handleChecklistUpdate = async (
-        section: 'livingAreaChecklist' | 'bathroomChecklist' | 'kitchenChecklist' | 'safetyChecklist',
+        section: string,
         items: ChecklistItem[]
     ) => {
-        updateChecklist(section, items);
-        await broadcastChange(items, 'checklist', section);
+        try {
+            await updateAudit({
+                [section]: items
+            }, 'checklist');
+        } catch (error) {
+            toast.error('Failed to update checklist');
+        }
     };
 
-    if (!currentAudit) return null;
-
     return (
-        <>
-            <div className="flex justify-between items-center mb-6">
+        <div className="relative min-h-screen pb-16">
+            {/* Cursor tracking */}
+            <CollaborativeCursors auditId={id as string} username={username!} />
+
+            <div className="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 p-4 border-b">
                 <h1 className="text-2xl font-bold">Audit Details</h1>
-                <CollaborationIndicator auditId={id! as string} />
+                <CollaborationIndicator auditId={id as string} />
             </div>
-            <Tabs defaultValue="basic" className="space-y-6">
-                <ScrollArea className="w-full">
-                    <TabsList className="w-full justify-start">
-                        <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                        <TabsTrigger value="living">Living Areas</TabsTrigger>
-                        <TabsTrigger value="bathroom">Bathroom</TabsTrigger>
-                        <TabsTrigger value="kitchen">Kitchen</TabsTrigger>
-                        <TabsTrigger value="safety">Safety</TabsTrigger>
-                        <TabsTrigger value="summary">Summary</TabsTrigger>
-                    </TabsList>
-                </ScrollArea>
 
-                <TabsContent value="basic">
-                    <BasicInfoForm
-                        data={currentAudit}
-                        onUpdate={handleBasicInfoUpdate}
-                    />
-                </TabsContent>
+            <div className="px-4">
+                <Tabs defaultValue="basic" className="space-y-6">
+                    <ScrollArea className="w-full border-b">
+                        <TabsList className="w-full justify-start">
+                            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                            <TabsTrigger value="living">Living Areas</TabsTrigger>
+                            <TabsTrigger value="bathroom">Bathroom</TabsTrigger>
+                            <TabsTrigger value="kitchen">Kitchen</TabsTrigger>
+                            <TabsTrigger value="safety">Safety</TabsTrigger>
+                            <TabsTrigger value="summary">Summary</TabsTrigger>
+                        </TabsList>
+                    </ScrollArea>
 
-                <TabsContent value="living">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Living Areas Checklist</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <EnhancedChecklist
-                                items={currentAudit?.livingAreaChecklist || []}
-                                onUpdate={(items) => handleChecklistUpdate('livingAreaChecklist', items)}
+                    <div className="space-y-8">
+                        <TabsContent value="basic">
+                            <BasicInfoForm
+                                data={audit}
+                                onUpdate={handleBasicInfoUpdate}
                             />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                        </TabsContent>
 
-                <TabsContent value="bathroom">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Bathroom Checklist</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <EnhancedChecklist
-                                items={currentAudit?.bathroomChecklist || []}
-                                onUpdate={(items) => handleChecklistUpdate('bathroomChecklist', items)}
+                        {/* <TabsContent value="living">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Living Areas Checklist</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <EnhancedChecklist
+                                        items={audit.livingAreaChecklist || []}
+                                        onUpdate={(items) => handleChecklistUpdate('livingAreaChecklist', items)}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </TabsContent> */}
+                        <TabsContent value="basic">
+                            <BasicInfoForm
+                                data={audit!}
+                                onUpdate={handleBasicInfoUpdate}
                             />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                        </TabsContent>
 
-                <TabsContent value="kitchen">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Kitchen Checklist</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <EnhancedChecklist
-                                items={currentAudit?.kitchenChecklist || []}
-                                onUpdate={(items) => handleChecklistUpdate('kitchenChecklist', items)}
-                            />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                        <TabsContent value="living">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Living Areas Checklist</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <EnhancedChecklist
+                                        items={audit?.livingAreaChecklist || []}
+                                        onUpdate={(items) => handleChecklistUpdate('livingAreaChecklist', items)}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
 
-                <TabsContent value="safety">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Safety Checklist</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <EnhancedChecklist
-                                items={currentAudit?.safetyChecklist || []}
-                                onUpdate={(items) => handleChecklistUpdate('safetyChecklist', items)}
-                            />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                        <TabsContent value="bathroom">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Bathroom Checklist</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <EnhancedChecklist
+                                        items={audit?.bathroomChecklist || []}
+                                        onUpdate={(items) => handleChecklistUpdate('bathroomChecklist', items)}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
 
-                <TabsContent value="summary">
-                    <SummarySection data={currentAudit!} />
-                </TabsContent>
-            </Tabs>
+                        <TabsContent value="kitchen">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Kitchen Checklist</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <EnhancedChecklist
+                                        items={audit?.kitchenChecklist || []}
+                                        onUpdate={(items) => handleChecklistUpdate('kitchenChecklist', items)}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="safety">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Safety Checklist</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <EnhancedChecklist
+                                        items={audit?.safetyChecklist || []}
+                                        onUpdate={(items) => handleChecklistUpdate('safetyChecklist', items)}
+                                    />
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="summary">
+                            <SummarySection data={audit!} />
+                        </TabsContent>
+
+                        {/* Other tab contents remain the same */}
+                    </div>
+                </Tabs>
+            </div>
 
             <Footer
-                onSaveDraft={handleSaveDraft}
-                onComplete={handleComplete}
+                onSaveDraft={() => toast.success('Draft saved')}
+                onComplete={() => {
+                    toast.success('Audit completed');
+                    router.push('/audit/drafts');
+                }}
+            // className="fixed bottom-0 left-0 right-0 bg-white border-t"
             />
-        </>
+        </div>
     );
 }

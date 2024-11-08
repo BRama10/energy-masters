@@ -1,0 +1,42 @@
+// prisma/schema.prisma
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL") // uses a direct connection
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+// prisma/schema.prisma
+model Audit {
+  id          String    @id @default(cuid())
+  unitNumber  String?
+  teamNumber  String?
+  completedBy String?
+  timeIn      String?   // Changed from DateTime to String
+  timeOut     String?   // Changed from DateTime to String
+  date        String?   // Changed from DateTime to String
+  status      String    @default("draft")
+  notes       String?   @db.Text
+
+  // Checklist items as JSON
+  livingAreaChecklist Json?
+  bathroomChecklist  Json?
+  kitchenChecklist   Json?
+  safetyChecklist    Json?
+  sealedAreas       Json?
+  faucetAerators    Json?
+
+  // Additional fields
+  showerHead         Boolean  @default(false)
+  toiletTummy        Boolean  @default(false)
+  standardPowerStrip Boolean  @default(false)
+  smartPowerStrip    Boolean  @default(false)
+
+  // Collaboration fields
+  collaborators     String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
