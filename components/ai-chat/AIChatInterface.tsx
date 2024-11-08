@@ -12,6 +12,8 @@ import {
     X
 } from 'lucide-react';
 
+import { useChat } from 'ai/react';
+
 interface Message {
     id: string;
     content: string;
@@ -28,15 +30,19 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     isOpen,
     onClose
 }) => {
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            content: "Hi! I'm your Energy Masters AI assistant. I can help you with the audit process and answer any questions you have about energy efficiency.",
-            sender: 'ai',
-            timestamp: new Date()
-        }
-    ]);
-    const [input, setInput] = useState('');
+    // const [messages, setMessages] = useState<Message[]>([
+    //     {
+    //         id: '1',
+    //         content: "Hi! I'm your Energy Masters AI assistant. I can help you with the audit process and answer any questions you have about energy efficiency.",
+    //         sender: 'ai',
+    //         timestamp: new Date()
+    //     }
+    // ]);
+
+    const { messages, input, handleSubmit, handleInputChange, isLoading } =
+        useChat();
+
+    // const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -46,32 +52,32 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
         }
     }, [messages]);
 
-    const handleSend = async () => {
-        if (!input.trim()) return;
+    // const handleSend = async () => {
+    //     if (!input.trim()) return;
 
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            content: input,
-            sender: 'user',
-            timestamp: new Date()
-        };
+    //     const newMessage: Message = {
+    //         id: Date.now().toString(),
+    //         content: input,
+    //         sender: 'user',
+    //         timestamp: new Date()
+    //     };
 
-        setMessages(prev => [...prev, newMessage]);
-        setInput('');
-        setIsTyping(true);
+    //     setMessages(prev => [...prev, newMessage]);
+    //     setInput('');
+    //     setIsTyping(true);
 
-        // Simulate AI response
-        setTimeout(() => {
-            const aiResponse: Message = {
-                id: (Date.now() + 1).toString(),
-                content: "I'll help you with that! [AI response simulation]",
-                sender: 'ai',
-                timestamp: new Date()
-            };
-            setMessages(prev => [...prev, aiResponse]);
-            setIsTyping(false);
-        }, 1500);
-    };
+    //     // Simulate AI response
+    //     setTimeout(() => {
+    //         const aiResponse: Message = {
+    //             id: (Date.now() + 1).toString(),
+    //             content: "I'll help you with that! [AI response simulation]",
+    //             sender: 'ai',
+    //             timestamp: new Date()
+    //         };
+    //         setMessages(prev => [...prev, aiResponse]);
+    //         setIsTyping(false);
+    //     }, 1500);
+    // };
 
     return (
         <AnimatePresence>
@@ -107,34 +113,35 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                                     key={message.id}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className={`flex gap-2 ${message.sender === 'user' ? 'flex-row-reverse' : ''
+                                    className={`flex gap-2 ${message.role === 'user' ? 'flex-row-reverse' : ''
                                         }`}
                                 >
                                     <div className={`
                     w-8 h-8 rounded-full flex items-center justify-center shrink-0
-                    ${message.sender === 'user'
+                    ${message.role === 'user'
                                             ? 'bg-primary text-primary-foreground'
                                             : 'bg-primary/10'
                                         }
                   `}>
-                                        {message.sender === 'user'
+                                        {message.role === 'user'
                                             ? <User className="w-5 h-5" />
                                             : <Sparkles className="w-5 h-5 text-primary" />
                                         }
                                     </div>
                                     <div className={`
                     rounded-2xl p-3 max-w-[80%]
-                    ${message.sender === 'user'
+                    ${message.role === 'user'
                                             ? 'bg-primary text-primary-foreground'
                                             : 'bg-muted'
                                         }
                   `}>
                                         <p className="text-sm">{message.content}</p>
                                         <span className="text-xs opacity-70 mt-1 block">
-                                            {message.timestamp.toLocaleTimeString([], {
+                                            {/* {message.timestamp.toLocaleTimeString([], {
                                                 hour: '2-digit',
                                                 minute: '2-digit'
-                                            })}
+                                            })} */}
+                                            Placeholder
                                         </span>
                                     </div>
                                 </motion.div>
@@ -163,15 +170,17 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                     {/* Input Area */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t">
                         <form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                handleSend();
-                            }}
+                            // onSubmit={(e) => {
+                            //     e.preventDefault();
+                            //     handleSend();
+                            // }}
+                            onSubmit={handleSubmit}
                             className="flex gap-2"
                         >
                             <Input
                                 value={input}
-                                onChange={(e) => setInput(e.target.value)}
+                                // onChange={(e) => setInput(e.target.value)}
+                                onChange={handleInputChange}
                                 placeholder="Ask anything about the audit process..."
                                 className="flex-1"
                             />

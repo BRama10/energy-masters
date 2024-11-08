@@ -5,14 +5,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BasicInfoForm } from '@/components/BasicInfoForm';
 import { EnhancedChecklist } from '@/components/ChecklistSection';
-import { SummarySection } from '@/components/SummarySection';
 import { Footer } from '@/components/layout/Footer';
 import { useAuditStore } from '@/store/audit';
 import { toast } from 'sonner';
 import { validateAuditCompletion } from '@/lib/validation';
-import { downloadAuditReport } from '@/lib/export';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getAuditFromStorage } from '@/lib/storage';
 import { CHECKLIST_ITEMS } from '@/constants/checklist-items';
 import { AuditStatsSection } from '@/components/AuditStatsSection';
 import { getAudit, updateAudit } from '@/lib/actions/audit';
@@ -62,7 +59,6 @@ export default function EditAuditPage() {
 
         if (result.success) {
             completeAudit();
-            downloadAuditReport(currentAudit);
             toast.success('Audit completed successfully');
             router.push('/audit/drafts');
         } else {
