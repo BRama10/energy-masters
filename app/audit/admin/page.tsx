@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { AuditDashboard } from './dashboard'
 import { getAudits } from '@/lib/actions/audit'
 

@@ -28,6 +28,7 @@ export default function NewAuditPage() {
         updateBasicInfo,
         updateChecklist,
         completeAudit,
+        updateStats,
         resetAudit
     } = useAuditStore();
 
@@ -155,7 +156,7 @@ export default function NewAuditPage() {
                 <TabsContent value="stats">
                     <AuditStatsSection
                         data={currentAudit}
-                        onUpdate={updateBasicInfo}
+                        onUpdate={updateStats}
                     />
                 </TabsContent>
 
