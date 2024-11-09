@@ -78,16 +78,16 @@ export const AuditDashboard: React.FC<AuditDashboardProps> = ({ audits }) => {
         });
 
         // Convert sums to averages
-        Object.keys(avgInstallations.sealedAreas).forEach(key => {
-            //@ts-ignore
-            avgInstallations.sealedAreas[key] = +(avgInstallations.sealedAreas[key] / total).toFixed(1);
-        });
-        avgInstallations.faucetAerators.bath = +(avgInstallations.faucetAerators.bath / total).toFixed(1);
-        avgInstallations.faucetAerators.kitchen = +(avgInstallations.faucetAerators.kitchen / total).toFixed(1);
-        avgInstallations.showerHead = +(avgInstallations.showerHead / total).toFixed(1);
-        avgInstallations.toiletTummy = +(avgInstallations.toiletTummy / total).toFixed(1);
-        avgInstallations.standardPowerStrip = +(avgInstallations.standardPowerStrip / total).toFixed(1);
-        avgInstallations.smartPowerStrip = +(avgInstallations.smartPowerStrip / total).toFixed(1);
+        // Object.keys(avgInstallations.sealedAreas).forEach(key => {
+        //     //@ts-ignore
+        //     avgInstallations.sealedAreas[key] = +(avgInstallations.sealedAreas[key] / total).toFixed(1);
+        // });
+        // avgInstallations.faucetAerators.bath = +(avgInstallations.faucetAerators.bath / total).toFixed(1);
+        // avgInstallations.faucetAerators.kitchen = +(avgInstallations.faucetAerators.kitchen / total).toFixed(1);
+        // avgInstallations.showerHead = +(avgInstallations.showerHead / total).toFixed(1);
+        // avgInstallations.toiletTummy = +(avgInstallations.toiletTummy / total).toFixed(1);
+        // avgInstallations.standardPowerStrip = +(avgInstallations.standardPowerStrip / total).toFixed(1);
+        // avgInstallations.smartPowerStrip = +(avgInstallations.smartPowerStrip / total).toFixed(1);
 
         const statusCount = audits.reduce((acc, audit) => {
             const status = audit.status || 'draft';

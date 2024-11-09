@@ -6,9 +6,10 @@ export async function POST(req: Request) {
     const { messages }: { messages: CoreMessage[] } = await req.json();
 
     const result = await streamText({
-        model: openai('gpt-4o'),
+        model: openai('gpt-4o-mini'),
         system: EM_ASSISTANT_PROMPT,
         messages,
+        maxTokens: 200
     });
 
     return result.toDataStreamResponse();

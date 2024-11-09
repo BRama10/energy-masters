@@ -26,7 +26,8 @@ export const Header = () => {
         if (p == '/audit/new' || p == '/audit/admin' || p == '/audit/drafts') {
             router.push('/')
         } else if (p.includes('/audit/')) {
-            router.push('/audit/drafts')
+            // router.push('/audit/drafts')
+            router.back()
         }
     }
 
@@ -35,7 +36,7 @@ export const Header = () => {
             <div className="container mx-auto px-4 py-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        {pathname !== '/' && (
+                        {(pathname != '/' && pathname != '/login' ) && (
                             <Button variant="ghost" size="icon" onClick={() => determineBackButtonFunction(pathname)}>
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
