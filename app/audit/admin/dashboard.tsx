@@ -1,21 +1,18 @@
-'use client'
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { AuditData, AuditStatus } from '@/types/audit';
 import {
     ClipboardList,
-    Clock,
     Battery,
     Droplet,
     Lightbulb,
     Power,
     AlertCircle,
-    CheckCircle2,
-    Clock3
+    Home,
+    Waves,
+    Zap
 } from 'lucide-react';
 
 interface AuditDashboardProps {
@@ -23,19 +20,28 @@ interface AuditDashboardProps {
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-const STATUS_COLORS = {
-    draft: '#FFBB28',
-    completed: '#00C49F',
-    review: '#0088FE'
-};
 
 export const AuditDashboard: React.FC<AuditDashboardProps> = ({ audits }) => {
     const stats = useMemo(() => {
         const total = audits.length;
+        if (total === 0) return {
+            total: 0,
+            energyDataCandidates: 0,
+            residentProfileCandidates: 0,
+            avgInstallations: {
+                sealedAreas: { lightSwitches: 0, outlets: 0, vents: 0, windows: 0, baseboards: 0 },
+                faucetAerators: { bath: 0, kitchen: 0 },
+                showerHead: 0,
+                toiletTummy: 0,
+                standardPowerStrip: 0,
+                smartPowerStrip: 0
+            },
+            statusCount: {}
+        };
+
         const energyDataCandidates = audits.filter(a => a.isEnergyDataCandidate).length;
         const residentProfileCandidates = audits.filter(a => a.isResidentProfileCandidate).length;
 
-        // Calculate average installations
         const avgInstallations = {
             sealedAreas: {
                 lightSwitches: 0,
@@ -58,12 +64,12 @@ export const AuditDashboard: React.FC<AuditDashboardProps> = ({ audits }) => {
             if (audit.sealedAreas) {
                 Object.keys(audit.sealedAreas).forEach(key => {
                     //@ts-ignore
-                    avgInstallations.sealedAreas[key] += audit.sealedAreas[key];
+                    avgInstallations.sealedAreas[key] += audit.sealedAreas[key] || 0;
                 });
             }
             if (audit.faucetAerators) {
-                avgInstallations.faucetAerators.bath += audit.faucetAerators.bath;
-                avgInstallations.faucetAerators.kitchen += audit.faucetAerators.kitchen;
+                avgInstallations.faucetAerators.bath += audit.faucetAerators.bath || 0;
+                avgInstallations.faucetAerators.kitchen += audit.faucetAerators.kitchen || 0;
             }
             avgInstallations.showerHead += audit.showerHead || 0;
             avgInstallations.toiletTummy += audit.toiletTummy || 0;
@@ -83,7 +89,6 @@ export const AuditDashboard: React.FC<AuditDashboardProps> = ({ audits }) => {
         avgInstallations.standardPowerStrip = +(avgInstallations.standardPowerStrip / total).toFixed(1);
         avgInstallations.smartPowerStrip = +(avgInstallations.smartPowerStrip / total).toFixed(1);
 
-        // Status distribution
         const statusCount = audits.reduce((acc, audit) => {
             const status = audit.status || 'draft';
             acc[status] = (acc[status] || 0) + 1;
@@ -99,32 +104,16 @@ export const AuditDashboard: React.FC<AuditDashboardProps> = ({ audits }) => {
         };
     }, [audits]);
 
-    const statusChartData = Object.entries(stats.statusCount).map(([status, count]) => ({
-        name: status.charAt(0).toUpperCase() + status.slice(1),
-        value: count
-    }));
-
-    const installationsBarData = [
-        { name: 'Light Switches', value: stats.avgInstallations.sealedAreas.lightSwitches },
-        { name: 'Outlets', value: stats.avgInstallations.sealedAreas.outlets },
-        { name: 'Vents', value: stats.avgInstallations.sealedAreas.vents },
-        { name: 'Windows', value: stats.avgInstallations.sealedAreas.windows },
-        { name: 'Baseboards', value: stats.avgInstallations.sealedAreas.baseboards },
-    ];
-
-    const waterInstallationsData = [
-        { name: 'Bath Aerators', value: stats.avgInstallations.faucetAerators.bath },
-        { name: 'Kitchen Aerators', value: stats.avgInstallations.faucetAerators.kitchen },
-        { name: 'Shower Heads', value: stats.avgInstallations.showerHead },
-        { name: 'Toilet Tummies', value: stats.avgInstallations.toiletTummy },
-    ];
+    const formatValue = (value: number) => {
+        return isNaN(value) ? '0' : value.toFixed(1);
+    };
 
     return (
-        <div className="container mx-auto p-4 space-y-4">
-            <h1 className="text-2xl font-bold mb-6">Audit Results Dashboard</h1>
+        <div className="container mx-auto p-4 space-y-6">
+            <h1 className="text-2xl font-bold">Audit Results Dashboard</h1>
 
             {/* Top Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Audits</CardTitle>
@@ -164,58 +153,40 @@ export const AuditDashboard: React.FC<AuditDashboardProps> = ({ audits }) => {
                 </Card>
             </div>
 
-            {/* Status Distribution */}
-            <Card className="mt-6">
-                <CardHeader>
-                    <CardTitle>Audit Status Distribution</CardTitle>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={statusChartData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={60}
-                                outerRadius={80}
-                                fill="#8884d8"
-                                paddingAngle={5}
-                                dataKey="value"
-                                label
-                            >
-                                {statusChartData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <Tooltip />
-                        </PieChart>
-                    </ResponsiveContainer>
-                </CardContent>
-            </Card>
-
             {/* Installation Metrics */}
-            <Tabs defaultValue="sealed" className="mt-6">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="sealed">Sealed Areas</TabsTrigger>
-                    <TabsTrigger value="water">Water Fixtures</TabsTrigger>
-                    <TabsTrigger value="power">Power Management</TabsTrigger>
+            <Tabs defaultValue="sealed" className="space-y-4">
+                <TabsList className="grid grid-cols-1 sm:grid-cols-3 w-full gap-4 h-auto p-1">
+                    <TabsTrigger value="sealed" className="flex items-center gap-2 data-[state=active]:text-primary">
+                        <Home className="h-4 w-4" />
+                        <span className="hidden sm:inline">Sealed Areas</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="water" className="flex items-center gap-2 data-[state=active]:text-primary">
+                        <Waves className="h-4 w-4" />
+                        <span className="hidden sm:inline">Water Fixtures</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="power" className="flex items-center gap-2 data-[state=active]:text-primary">
+                        <Zap className="h-4 w-4" />
+                        <span className="hidden sm:inline">Power Management</span>
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="sealed">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Average Sealed Areas per Audit</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                <Home className="h-5 w-5" />
+                                Sealed Areas
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={installationsBarData}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#8884d8" />
-                                </BarChart>
-                            </ResponsiveContainer>
+                        <CardContent>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {Object.entries(stats.avgInstallations.sealedAreas).map(([key, value]) => (
+                                    <div key={key} className="flex items-center justify-between p-4 border rounded-lg">
+                                        <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                        <span className="text-xl font-bold">{formatValue(value)}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -223,18 +194,42 @@ export const AuditDashboard: React.FC<AuditDashboardProps> = ({ audits }) => {
                 <TabsContent value="water">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Water Conservation Installations</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                <Waves className="h-5 w-5" />
+                                Water Fixtures
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={waterInstallationsData}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#00C49F" />
-                                </BarChart>
-                            </ResponsiveContainer>
+                        <CardContent>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                                        <span>Bath Aerators</span>
+                                        <span className="text-xl font-bold">
+                                            {formatValue(stats.avgInstallations.faucetAerators.bath)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                                        <span>Kitchen Aerators</span>
+                                        <span className="text-xl font-bold">
+                                            {formatValue(stats.avgInstallations.faucetAerators.kitchen)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                                        <span>Shower Heads</span>
+                                        <span className="text-xl font-bold">
+                                            {formatValue(stats.avgInstallations.showerHead)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                                        <span>Toilet Tummies</span>
+                                        <span className="text-xl font-bold">
+                                            {formatValue(stats.avgInstallations.toiletTummy)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -242,26 +237,29 @@ export const AuditDashboard: React.FC<AuditDashboardProps> = ({ audits }) => {
                 <TabsContent value="power">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Power Strip Installations</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                <Zap className="h-5 w-5" />
+                                Power Strip Installations
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="flex items-center justify-between p-4 border rounded">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="flex items-center justify-between p-4 border rounded-lg">
                                     <div className="flex items-center gap-2">
                                         <Power className="h-5 w-5 text-muted-foreground" />
                                         <span>Standard Power Strips</span>
                                     </div>
                                     <span className="text-2xl font-bold">
-                                        {stats.avgInstallations.standardPowerStrip}
+                                        {formatValue(stats.avgInstallations.standardPowerStrip)}
                                     </span>
                                 </div>
-                                <div className="flex items-center justify-between p-4 border rounded">
+                                <div className="flex items-center justify-between p-4 border rounded-lg">
                                     <div className="flex items-center gap-2">
                                         <Lightbulb className="h-5 w-5 text-muted-foreground" />
                                         <span>Smart Power Strips</span>
                                     </div>
                                     <span className="text-2xl font-bold">
-                                        {stats.avgInstallations.smartPowerStrip}
+                                        {formatValue(stats.avgInstallations.smartPowerStrip)}
                                     </span>
                                 </div>
                             </div>

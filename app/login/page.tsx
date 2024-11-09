@@ -23,7 +23,8 @@ export default function LoginPage() {
 
     Cookies.set('username', username, { expires: 7 });
     router.push('/');
-    router.refresh();
+    window.location.reload();
+    // router.refresh();
   };
 
   return (

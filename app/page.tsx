@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
@@ -20,7 +20,7 @@ export default function HomePage() {
       </div>
 
       <div className="grid gap-4">
-        <Card 
+        <Card
           className="cursor-pointer hover:bg-accent/50 transition-colors"
           onClick={() => router.push('/audit/new')}
         >
@@ -37,7 +37,7 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        <Card 
+        <Card
           className="cursor-pointer hover:bg-accent/50 transition-colors"
           onClick={() => router.push('/audit/drafts')}
         >
@@ -49,6 +49,23 @@ export default function HomePage() {
               <h2 className="font-semibold">View Drafts</h2>
               <p className="text-sm text-muted-foreground">
                 Continue working on saved audits
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card
+          className="cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={() => router.push('/audit/admin')}
+        >
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="p-2 bg-primary/10 rounded-full">
+              <User2 className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-semibold">View Overall Stats</h2>
+              <p className="text-sm text-muted-foreground">
+                View Cumulative Stats
               </p>
             </div>
           </CardContent>
