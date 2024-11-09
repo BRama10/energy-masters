@@ -1,3 +1,4 @@
+// components/ai-chat/AIChatInterface.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
@@ -8,9 +9,7 @@ import {
     Bot,
     User,
     Sparkles,
-    X,
-    Mic,
-    MicOff
+    X
 } from 'lucide-react';
 
 import { useChat } from 'ai/react';
@@ -34,9 +33,20 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     isOpen,
     onClose
 }) => {
-    const { messages, input, handleSubmit, handleInputChange, isLoading } = useChat();
+    // const [messages, setMessages] = useState<Message[]>([
+    //     {
+    //         id: '1',
+    //         content: "Hi! I'm your Energy Masters AI assistant. I can help you with the audit process and answer any questions you have about energy efficiency.",
+    //         sender: 'ai',
+    //         timestamp: new Date()
+    //     }
+    // ]);
+
+    const { messages, input, handleSubmit, handleInputChange, isLoading } =
+        useChat();
+
+    // const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
-    const [isListening, setIsListening] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -45,23 +55,32 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
         }
     }, [messages]);
 
-    const handleMicrophoneClick = () => {
-        setIsListening(!isListening);
-        // Placeholder for actual STT implementation
-        if (!isListening) {
-            // Simulate recording starting
-            console.log('Started listening...');
-            // After 3 seconds, simulate getting some text
-            setTimeout(() => {
-                const simulatedText = 'This is a simulated speech-to-text result.';
-                handleInputChange({ target: { value: simulatedText } } as React.ChangeEvent<HTMLInputElement>);
-                setIsListening(false);
-            }, 3000);
-        } else {
-            // Simulate stopping the recording
-            console.log('Stopped listening');
-        }
-    };
+    // const handleSend = async () => {
+    //     if (!input.trim()) return;
+
+    //     const newMessage: Message = {
+    //         id: Date.now().toString(),
+    //         content: input,
+    //         sender: 'user',
+    //         timestamp: new Date()
+    //     };
+
+    //     setMessages(prev => [...prev, newMessage]);
+    //     setInput('');
+    //     setIsTyping(true);
+
+    //     // Simulate AI response
+    //     setTimeout(() => {
+    //         const aiResponse: Message = {
+    //             id: (Date.now() + 1).toString(),
+    //             content: "I'll help you with that! [AI response simulation]",
+    //             sender: 'ai',
+    //             timestamp: new Date()
+    //         };
+    //         setMessages(prev => [...prev, aiResponse]);
+    //         setIsTyping(false);
+    //     }, 1500);
+    // };
 
     return (
         <AnimatePresence>
@@ -97,30 +116,29 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                                     key={message.id}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className={`flex gap-2 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
+                                    className={`flex gap-2 ${message.role === 'user' ? 'flex-row-reverse' : ''
+                                        }`}
                                 >
                                     <div className={`
-                                        w-8 h-8 rounded-full flex items-center justify-center shrink-0
-                                        ${message.role === 'user'
+                    w-8 h-8 rounded-full flex items-center justify-center shrink-0
+                    ${message.role === 'user'
                                             ? 'bg-primary text-primary-foreground'
                                             : 'bg-primary/10'
                                         }
-                                    `}>
+                  `}>
                                         {message.role === 'user'
                                             ? <User className="w-5 h-5" />
                                             : <Sparkles className="w-5 h-5 text-primary" />
                                         }
                                     </div>
                                     <div className={`
-                                        rounded-2xl p-3 max-w-[80%]
-                                        ${message.role === 'user'
+                    rounded-2xl p-3 max-w-[80%]
+                    ${message.role === 'user'
                                             ? 'bg-primary text-primary-foreground'
                                             : 'bg-muted'
                                         }
-                                    `}>
-                                        <Markdown 
-                                            className="text-sm" 
-                                            remarkPlugins={[remarkGfm]}
+                  `}>
+                                        <Markdown className="text-sm" remarkPlugins={[remarkGfm]}
                                             components={{
                                                 p: ({ children, ...props }) => <p className="mb-4 last:mb-0" {...props}>{children}</p>,
                                                 br: ({ ...props }) => <br {...props} />,
@@ -134,9 +152,7 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                                                     <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4">{children}</blockquote>
                                                 ),
                                             }}
-                                        >
-                                            {message.content}
-                                        </Markdown>
+                                        >{message.content}</Markdown>
                                     </div>
                                 </motion.div>
                             ))}
@@ -173,18 +189,6 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                                 placeholder="Ask anything about the audit process..."
                                 className="flex-1"
                             />
-                            <Button 
-                                type="button"
-                                size="icon"
-                                variant={isListening ? "destructive" : "secondary"}
-                                onClick={handleMicrophoneClick}
-                            >
-                                {isListening ? (
-                                    <MicOff className="w-4 h-4" />
-                                ) : (
-                                    <Mic className="w-4 h-4" />
-                                )}
-                            </Button>
                             <Button type="submit" size="icon">
                                 <Send className="w-4 h-4" />
                             </Button>
@@ -195,5 +199,3 @@ export const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
         </AnimatePresence>
     );
 };
-
-export default AIChatInterface;

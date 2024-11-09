@@ -143,7 +143,7 @@ export default function NewAuditPage() {
 
                 <TabsContent value="basic">
                     <BasicInfoForm
-                        data={currentAudit}
+                        data={{...currentAudit, completedBy: username!}}
                         onUpdate={updateBasicInfo}
                     />
                 </TabsContent>

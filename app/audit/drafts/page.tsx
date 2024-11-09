@@ -24,7 +24,7 @@ export default function DraftsPage() {
     useEffect(() => {
         const loadAudits = async () => {
             try {
-                const result = await getAudits(username!);
+                const result = await getAudits(null);
                 if (result.success) {
                     setAudits(result.data as AuditData[]);
                 } else {

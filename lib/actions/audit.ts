@@ -52,10 +52,8 @@ export async function updateAudit(userId: string, id: string, auditData: Partial
     }
 }
 
-export async function getAudit(userId: string, id: string) {
+export async function getAudit(userId: string | undefined | null, id: string) {
     try {
-        if (!userId) throw new Error('Unauthorized');
-
         const audit = await prisma.audit.findUnique({
             where: { id },
         });
@@ -68,14 +66,22 @@ export async function getAudit(userId: string, id: string) {
     }
 }
 
-export async function getAudits(userId: string,) {
+export async function getAudits(userId: string | undefined | null) {
     try {
-        if (!userId) throw new Error('Unauthorized');
+        let audits: any;
 
-        const audits = await prisma.audit.findMany({
-            where: { userId },
-            orderBy: { updatedAt: 'desc' },
-        });
+        if (!userId) {
+            audits = await prisma.audit.findMany({
+                orderBy: { updatedAt: 'desc' },
+            });
+        } else {
+            audits = await prisma.audit.findMany({
+                where: { userId },
+                orderBy: { updatedAt: 'desc' },
+            });
+        }
+
+
 
         return {
             success: true,
@@ -89,7 +95,6 @@ export async function getAudits(userId: string,) {
 
 export async function deleteAudit(userId: string, id: string) {
     try {
-        if (!userId) throw new Error('Unauthorized');
 
         await prisma.audit.delete({
             where: { id },
