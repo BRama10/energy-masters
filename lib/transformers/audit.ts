@@ -25,7 +25,23 @@ export function transformPrismaAuditToAuditData(prismaAudit: Audit): AuditData {
     bathroomChecklist: prismaAudit.bathroomChecklist as ChecklistItem[] || [],
     kitchenChecklist: prismaAudit.kitchenChecklist as ChecklistItem[] || [],
     
-    summary: prismaAudit.summary as AuditData['summary'],
+    // Transform stats fields
+    sealedAreas: prismaAudit.sealedAreas as AuditData['sealedAreas'] || {
+      lightSwitches: 0,
+      outlets: 0,
+      vents: 0,
+      windows: 0,
+      baseboards: 0,
+    },
+    faucetAerators: prismaAudit.faucetAerators as AuditData['faucetAerators'] || {
+      bath: 0,
+      kitchen: 0,
+    },
+    showerHead: prismaAudit.showerHead || 0,
+    toiletTummy: prismaAudit.toiletTummy || 0,
+    standardPowerStrip: prismaAudit.standardPowerStrip || 0,
+    smartPowerStrip: prismaAudit.smartPowerStrip || 0,
+    
     generalNotes: prismaAudit.generalNotes || undefined,
   };
 }
@@ -51,7 +67,14 @@ export function transformAuditDataToPrisma(auditData: Partial<AuditData>) {
     bathroomChecklist: auditData.bathroomChecklist as Prisma.JsonValue,
     kitchenChecklist: auditData.kitchenChecklist as Prisma.JsonValue,
     
-    summary: auditData.summary as Prisma.JsonValue,
+    // Transform stats fields to JSON/values
+    sealedAreas: auditData.sealedAreas as Prisma.JsonValue,
+    faucetAerators: auditData.faucetAerators as Prisma.JsonValue,
+    showerHead: auditData.showerHead || 0,
+    toiletTummy: auditData.toiletTummy || 0,
+    standardPowerStrip: auditData.standardPowerStrip || 0,
+    smartPowerStrip: auditData.smartPowerStrip || 0,
+    
     generalNotes: auditData.generalNotes,
   };
 

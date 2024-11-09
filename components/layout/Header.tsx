@@ -22,13 +22,21 @@ export const Header = () => {
     const [isAIChatOpen, setIsAIChatOpen] = useState(false);
     const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false);
 
+    const determineBackButtonFunction = (p: string) => {
+        if (p == '/audit/new' || p == '/audit/admin' || p == '/audit/drafts') {
+            router.push('/')
+        } else if (p.includes('/audit/')) {
+            router.push('/audit/drafts')
+        }
+    }
+
     return (
         <header className="sticky top-0 z-40 bg-white border-b">
             <div className="container mx-auto px-4 py-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         {pathname !== '/' && (
-                            <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                            <Button variant="ghost" size="icon" onClick={() => determineBackButtonFunction(pathname)}>
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
                         )}

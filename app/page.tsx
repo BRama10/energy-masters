@@ -2,11 +2,13 @@
 'use client';
 
 import { Card, CardContent } from "@/components/ui/card";
+import { useUser } from "@/hooks/useUser";
 import { Plus, FileText, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const router = useRouter();
+  const { username } = useUser();
 
   return (
     <div className="space-y-6">
@@ -54,7 +56,7 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        <Card
+        {(username?.toLowerCase() == 'bill' || username?.toLowerCase() == 'bill' || username?.toLowerCase() == 'leanne') && <Card
           className="cursor-pointer hover:bg-accent/50 transition-colors"
           onClick={() => router.push('/audit/admin')}
         >
@@ -69,7 +71,7 @@ export default function HomePage() {
               </p>
             </div>
           </CardContent>
-        </Card>
+        </Card>}
       </div>
     </div>
   );

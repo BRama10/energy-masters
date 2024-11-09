@@ -20,6 +20,7 @@ import { getCurrentTime } from '@/lib/utils';
 
 export default function NewAuditPage() {
     const { username } = useUser();
+    console.log('username is', username)
     const router = useRouter();
     const {
         currentAudit,
@@ -35,14 +36,14 @@ export default function NewAuditPage() {
     }, [resetAudit]);
 
     useEffect(() => {
-        if (!currentAudit) {
+        if (!currentAudit && username) {
             initializeAudit({
                 date: new Date().toISOString().split('T')[0],
-                completedBy: username!, 
+                completedBy: username!,
                 timeIn: getCurrentTime()
             });
         }
-    }, [currentAudit, initializeAudit]);
+    }, [currentAudit, initializeAudit, username]);
 
     const handleComplete = async () => {
         if (!currentAudit?.unitNumber || !currentAudit?.teamNumber) {

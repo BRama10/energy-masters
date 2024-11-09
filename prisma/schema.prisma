@@ -30,9 +30,15 @@ model Audit {
   bathroomChecklist       Json?     @db.JsonB
   kitchenChecklist        Json?     @db.JsonB
   
+  // Stats fields as JSON
+  sealedAreas            Json?     @db.JsonB
+  faucetAerators         Json?     @db.JsonB
+  showerHead             Int       @default(0)
+  toiletTummy            Int       @default(0)
+  standardPowerStrip     Int       @default(0)
+  smartPowerStrip        Int       @default(0)
+  
   // Optional fields
-  installations           Json?     @db.JsonB
-  summary                 Json?     @db.JsonB
   generalNotes           String?
   
   // Relations
