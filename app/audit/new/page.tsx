@@ -16,6 +16,7 @@ import { CHECKLIST_ITEMS } from '@/constants/checklist-items';
 import { AuditStatsSection } from '@/components/AuditStatsSection';
 import { saveAudit } from '@/lib/actions/audit';
 import { useUser } from '@/hooks/useUser';
+import { getCurrentTime } from '@/lib/utils';
 
 export default function NewAuditPage() {
     const { username } = useUser();
@@ -37,6 +38,8 @@ export default function NewAuditPage() {
         if (!currentAudit) {
             initializeAudit({
                 date: new Date().toISOString().split('T')[0],
+                completedBy: username!, 
+                timeIn: getCurrentTime()
             });
         }
     }, [currentAudit, initializeAudit]);
@@ -143,7 +146,7 @@ export default function NewAuditPage() {
 
                 <TabsContent value="basic">
                     <BasicInfoForm
-                        data={{...currentAudit, completedBy: username!}}
+                        data={currentAudit}
                         onUpdate={updateBasicInfo}
                     />
                 </TabsContent>
